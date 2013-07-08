@@ -11,10 +11,10 @@ var machineBase = FramestoresBase.child(process.env.INSTANCE_ID);
 machineBase.onDisconnect().remove();
 
 var checkForMounted = setInterval(function() {
-	exec('sudo fdisk -l | grep /dev/md | sed "s|.*\(md.\):.*|\1|"',
+	exec('sudo fdisk -l | grep /dev/md',
 		function (error, stdout, stderr) {
 			if (stdout.length>0) {
-				var dev = "/dev/" + stdout,
+				var dev = "/dev/" + stdout.match(/(md\d+):/)[1],
 					target = "/media/framestore";
 				async.series([
 					function(stepDone) {
