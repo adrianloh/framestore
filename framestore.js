@@ -43,7 +43,7 @@ var checkForMounted = setInterval(function() {
 									stat = stdout.split(" ").filter(function(o) { return o.length>0 });
 								s.available = stat[1];
 								s.used = stat[2];
-								s.free = stat[2];
+								s.free = stat[3];
 								s.device = stat[0];
 								s.mount = stat[5];
 								machineBase.set(s);
