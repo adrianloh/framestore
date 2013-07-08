@@ -2,10 +2,11 @@ var Firebase = require("firebase"),
 	MaggieBase = new Firebase("https://badabing.firebaseio-demo.com/"),
 	FramestoresBase = MaggieBase.child('framestores'),
 	machineIsLive = MaggieBase.child(".info").child("connected"),
-	machineBase = FramestoresBase.child(process.env.HOSTNAME),
 	exec = require('child_process').exec,
 	fs = require("fs"),
 	async = require("async");
+
+var machineBase = FramestoresBase.child(process.env.INSTANCE_ID);
 
 machineBase.onDisconnect().remove();
 
