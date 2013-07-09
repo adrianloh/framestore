@@ -48,11 +48,8 @@ while 1:
 		res = os.popen("df -h | grep md").read().strip()
 		if res:
 			data = res.split()
-		else:
-			data = [None for k in keys]
-			setStatus("offline")
-		h = dict(zip(keys, data))
-		patchData(h)
+			h = dict(zip(keys, data))
+			patchData(h)
 		sleep(10)
 	else:
 		setStatus("offline")
@@ -61,8 +58,11 @@ while 1:
 			raidPath = re.findall("\/dev\/md\d+", raidReady)[0]
 			if not os.path.exists(mountPath):
 				os.mkdir(mountPath)
-			cmd = "sudo mount -t xfs " + raidPath + " " + mountPath;
+			cmd = "sudo mount -t xfs " + raidPath + " " + mountPath
 			setStatus("mounting")
 			os.popen(cmd).read().strip()
 		else:
+			data = [None for k in keys]
+			h = dict(zip(keys, data))
+			patchData(h)
 			sleep(1)
