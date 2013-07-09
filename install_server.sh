@@ -18,6 +18,6 @@ initfile=/etc/init.d/framestore
 curl -s https://raw.github.com/adrianloh/framestore/master/framestore.sh > $initfile
 chmod +x $initfile
 ln -fs $initfile /etc/rc3.d/S30framestore
-chkconfig -add framestore
+chkconfig --add framestore
 chkconfig framestore on
 service framestore start

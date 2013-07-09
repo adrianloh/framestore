@@ -14,6 +14,6 @@ initfile=/etc/init.d/framestore_client
 curl -s https://raw.github.com/adrianloh/framestore/master/framestore_client.sh > $initfile
 chmod +x $initfile
 ln -fs $initfile /etc/rc3.d/S30framestore_client
-chkconfig -add framestore_client
+chkconfig --add framestore_client
 chkconfig framestore_client on
 service framestore_client start
