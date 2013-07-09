@@ -8,6 +8,7 @@ import atexit
 base = "https://badabing.firebaseio-demo.com"
 framestoreBase = base + '/framestores.json'
 machine_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-id").read().strip()
+zone = os.popen("ec2-metadata -z | awk '{print $2}'").read().strip()
 
 @atexit.register
 def removeBase():
@@ -41,8 +42,9 @@ while 1:
 					if not isMounted:
 						if not os.path.exists(remoteMountPath):
 							os.mkdir(remoteMountPath)
-						mounted = mountNfs(privateHostPath)
-						if not mounted:
+						if zone==data['zone']:
+							mountNfs(privateHostPath)
+						else:
 							mountNfs(publicHostPath)
 					online[private_ip] = data
 					online[public_ip] = data
