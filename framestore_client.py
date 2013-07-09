@@ -33,10 +33,10 @@ while 1:
 				status = data['status']
 				private_ip = data['private_ip']
 				public_ip = data['public_ip']
-				privateHostPath = private_ip + ":" + remoteMountPath
-				publicHostPath = public_ip + ":" + remoteMountPath
 				if status=='online' and data.has_key('mountedAt'):
 					remoteMountPath = data['mountedAt']
+					privateHostPath = private_ip + ":" + remoteMountPath
+					publicHostPath = public_ip + ":" + remoteMountPath
 					isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
 					if not isMounted:
 						if not os.path.exists(remoteMountPath):
