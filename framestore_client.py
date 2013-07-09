@@ -17,19 +17,24 @@ while 1:
 	online = []
 	if framestores:
 		for (instance_id, data) in framestores.items():
-			remoteMountPath = data['mountedAt']
-			ip = data['private_ip']
-			isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
-			hostPath = ip + ":" + remoteMountPath
-			if not isMounted:
-				if not os.path.exists(remoteMountPath):
-					os.mkdir(remoteMountPath)
-				cmd = "mount -t nfs " + hostPath + " " + remoteMountPath
-				proc = Popen(cmd, shell=True)
-				sleep(10)
-				if proc.poll() is None:
-					proc.kill()
-			online.append(hostPath)
+			if data.has_key('status') \
+				and (data['status']=='online') \
+				and data.has_key('mountedAt') \
+				and data.has_key('private_ip') \
+				and data.has_key('public_ip'):
+				remoteMountPath = data['mountedAt']
+				ip = data['private_ip']
+				isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
+				hostPath = ip + ":" + remoteMountPath
+				if not isMounted:
+					if not os.path.exists(remoteMountPath):
+						os.mkdir(remoteMountPath)
+					cmd = "mount -t nfs " + hostPath + " " + remoteMountPath
+					proc = Popen(cmd, shell=True)
+					sleep(10)
+					if proc.poll() is None:
+						proc.kill()
+				online.append(hostPath)
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
