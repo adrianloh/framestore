@@ -8,7 +8,8 @@ import atexit
 base = "https://badabing.firebaseio-demo.com"
 framestoreBase = base + '/framestores.json'
 machine_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-id").read().strip()
-zone = os.popen("ec2-metadata -z | awk '{print $2}'").read().strip()
+meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())
+zone = meta['availabilityZone']
 
 @atexit.register
 def removeBase():
@@ -34,8 +35,8 @@ while 1:
 				status = data['status']
 				private_ip = data['private_ip']
 				public_ip = data['public_ip']
-				if status=='online' and data.has_key('mountedAt'):
-					remoteMountPath = data['mountedAt']
+				if status=='online' and data.has_key('mount'):
+					remoteMountPath = data['mount']
 					privateHostPath = private_ip + ":" + remoteMountPath
 					publicHostPath = public_ip + ":" + remoteMountPath
 					isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()

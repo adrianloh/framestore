@@ -82,6 +82,9 @@ def exportNfs(mountPath):
 		sleep(5)
 		exportNfs(mountPath)
 
+def countFile(path):
+	return os.popen("find %s -type f | wc -l" % path).read().strip()
+
 while 1:
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
 	if raidReady:
@@ -89,12 +92,13 @@ while 1:
 		raidName = mdadmName(raidPath)
 		mountPath = "/media/" + raidName
 		isMounted = os.popen("mount | grep " + mountPath).read().strip()
-		keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
+		keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mount"]
 		if isMounted:
 			res = os.popen("df -h | grep md").read().strip()
 			if res:
 				data = res.split()
 				h = dict(zip(keys, data))
+				h['files'] = countFile(mountPath)
 				patchData(h)
 			exportNfs(mountPath)
 		else:
