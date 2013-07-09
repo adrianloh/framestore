@@ -23,9 +23,9 @@ def mountNfs(hostPath):
 		return True
 
 
-online = {}
 while 1:
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
+	online = {}
 	if framestores:
 		for (instance_id, data) in framestores.items():
 			if data.has_key('status') and data.has_key('private_ip') and data.has_key('public_ip'):
@@ -47,8 +47,6 @@ while 1:
 					online[public_ip] = data
 				elif status=='offline':
 					[online.__delitem__(ip) for ip in (private_ip, public_ip) if online.has_key(ip)]
-	else:
-		online = {}
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
