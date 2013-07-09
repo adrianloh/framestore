@@ -15,6 +15,7 @@ exec("curl -s http://169.254.169.254/latest/meta-data/instance-id",
 			hostname = process.env.HOSTNAME;
 		}
 		var machineBase = FramestoresBase.child(hostname);
+		machineBase.set("Waiting for filesytem...");
 		machineBase.onDisconnect().remove();
 	});
 
