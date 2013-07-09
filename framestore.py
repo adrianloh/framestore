@@ -22,6 +22,8 @@ stat = {
 	'status': 'offline'
 }
 
+print stat
+
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
 
