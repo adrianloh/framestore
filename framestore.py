@@ -7,11 +7,15 @@ import atexit
 base = "https://badabing.firebaseio-demo.com"
 framestoreBase = base + '/framestores'
 
-instance_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-id").read().strip()
+meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())
+instance_id = meta['instanceId']
+private_ip = meta['privateIp']
+zone = meta['availabilityZone']
+dob = meta['pendingTime']
+
 public_ip = os.popen("curl -s http://169.254.169.254/latest/meta-data/public-ipv4").read().strip()
-private_ip = os.popen("curl -s http://169.254.169.254/latest/meta-data/local-ipv4").read().strip()
 hostname = os.popen("curl -s http://169.254.169.254/latest/meta-data/public-hostname").read().strip()
-zone = os.popen("ec2-metadata -z | awk '{print $2}'").read().strip()
+
 machineBase = framestoreBase + '/' + instance_id
 
 stat = {
@@ -21,8 +25,6 @@ stat = {
     'zone': zone,
 	'status': 'offline'
 }
-
-print stat
 
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
