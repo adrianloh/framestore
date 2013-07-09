@@ -10,7 +10,7 @@ chkconfig nfs on
 chkconfig nfslock on
 chkconfig rpcbind on
 
-echo /media/framestore  *(rw,async,no_root_squash) > /etc/exports
+echo '/media/framestore  *(rw,async,no_root_squash)' > /etc/exports
 exportfs -ar
 exportfs -v
 
