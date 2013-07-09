@@ -15,10 +15,12 @@ machineBase = framestoreBase + '/' + instance_id
 stat = {
 	'public_ip': public_ip,
 	'private_ip': private_ip,
-	'hostname': hostname
+	'hostname': hostname,
+	'status': 'offline'
 }
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
+
 
 @atexit.register
 def removeBase():
