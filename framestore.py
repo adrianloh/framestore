@@ -83,7 +83,7 @@ def exportNfs(mountPath):
 		exportNfs(mountPath)
 
 def countFile(path):
-	return os.popen("find %s -type f | wc -l" % path).read().strip()
+	return int(os.popen("find %s -type f | wc -l" % path).read().strip())
 
 while 1:
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
