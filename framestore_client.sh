@@ -1,9 +1,6 @@
 #!/bin/sh
 # chkconfig: 345 30 01
 # description: framestore notification service
-#
-# curl -s https://renegade-princess.s3-ap-southeast-1.amazonaws.com/framestore.sh > /etc/init.d/framestore
-# chmod +x /etc/init.d/framestore
 
 service_base=/tmp/service_framestore_client
 service_file=$service_base/framestore_client.py
