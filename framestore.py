@@ -47,10 +47,12 @@ while 1:
 		setStatus("online")
 		res = os.popen("df -h | grep md").read().strip()
 		if res:
-			h = dict(zip(keys, res.split()))
-			patchData(h)
+			data = res.split()
 		else:
-			[deleteData(k) for k in keys]
+			data = [None for k in keys]
+			setStatus("offline")
+		h = dict(zip(keys, data))
+		patchData(h)
 		sleep(10)
 	else:
 		setStatus("offline")
