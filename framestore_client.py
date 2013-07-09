@@ -48,6 +48,7 @@ while 1:
 				elif status=='offline':
 					[online.__delitem__(ip) for ip in (private_ip, public_ip) if online.has_key(ip)]
 
+	print online
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
 		host_ip = mount[0].split(":")[0]
