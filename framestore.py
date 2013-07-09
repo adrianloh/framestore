@@ -73,7 +73,11 @@ while 1:
 			if not os.path.exists(mountPath):
 				os.mkdir(mountPath)
 			cmd = "mount -t xfs " + raidPath + " " + mountPath
-			setStatus("mounting")
+			print cmd
+			setStatus(cmd)
+			os.popen(cmd).read().strip()
+			cmd = """echo '%s  *(rw,async,no_root_squash)' > /etc/exports; exportfs -ar""" % mountPath
+			setStatus("Exporting NFS share " + mountPath)
 			os.popen(cmd).read().strip()
 	else:
 		setStatus("offline")
