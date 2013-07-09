@@ -49,30 +49,35 @@ def deleteData(key):
 def setStatus(status):
 	setData('status', status)
 
+def mdadmName(dev):
+	cmd = "mdadm --detail %s | grep Name | cut -d: -f3 | awk '{print $1}'" % dev
+	return os.popen(cmd).read().strip()
+
 while 1:
-	mountPath = "/media/framestore"
-	isMounted = os.popen("mount | grep " + mountPath).read().strip()
-	keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
-	if isMounted:
-		setStatus("online")
-		res = os.popen("df -h | grep md").read().strip()
-		if res:
-			data = res.split()
-			h = dict(zip(keys, data))
-			patchData(h)
-		sleep(10)
-	else:
-		setStatus("offline")
-		raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
-		if raidReady:
-			raidPath = re.findall("\/dev\/md\d+", raidReady)[0]
+	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
+	if raidReady:
+		raidPath = re.findall("\/dev\/md\d+", raidReady)[0]
+		raidName = mdadmName(raidPath)
+		mountPath = "/media/" + raidName
+		isMounted = os.popen("mount | grep " + mountPath).read().strip()
+		keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
+		if isMounted:
+			setStatus("online")
+			res = os.popen("df -h | grep md").read().strip()
+			if res:
+				data = res.split()
+				h = dict(zip(keys, data))
+				patchData(h)
+			sleep(10)
+		else:
 			if not os.path.exists(mountPath):
 				os.mkdir(mountPath)
 			cmd = "mount -t xfs " + raidPath + " " + mountPath
 			setStatus("mounting")
 			os.popen(cmd).read().strip()
-		else:
-			data = [None for k in keys]
-			h = dict(zip(keys, data))
-			patchData(h)
-			sleep(1)
+	else:
+		setStatus("offline")
+		data = [None for k in keys]
+		h = dict(zip(keys, data))
+		patchData(h)
+		sleep(1)
