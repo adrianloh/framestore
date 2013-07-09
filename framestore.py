@@ -20,7 +20,6 @@ stat = {
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
 
-
 @atexit.register
 def removeBase():
 	cmd = "curl -X DELETE %s" % machineBase + ".json"
@@ -54,28 +53,23 @@ while 1:
 	keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
 	if isMounted:
 		setStatus("online")
-		print "Filesystem is mounted"
 		res = os.popen("df -h | grep md").read().strip()
 		if res:
-			print "Updating filesystem stats"
 			data = res.split()
 			h = dict(zip(keys, data))
 			patchData(h)
 		sleep(10)
 	else:
 		setStatus("offline")
-		print "Filesystem is not mounted"
-		raidReady = os.popen("sudo fdisk -l | grep /dev/md").read().strip()
+		raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
 		if raidReady:
-			print "RAID array is up"
 			raidPath = re.findall("\/dev\/md\d+", raidReady)[0]
 			if not os.path.exists(mountPath):
 				os.mkdir(mountPath)
-			cmd = "sudo mount -t xfs " + raidPath + " " + mountPath
+			cmd = "mount -t xfs " + raidPath + " " + mountPath
 			setStatus("mounting")
 			os.popen(cmd).read().strip()
 		else:
-			print "RAID array is down"
 			data = [None for k in keys]
 			h = dict(zip(keys, data))
 			patchData(h)

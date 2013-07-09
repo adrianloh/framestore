@@ -13,18 +13,16 @@ BASE=https://badabing.firebaseio-demo.com
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 URL=$BASE/framestores/$INSTANCE_ID.json
 
-alias exec="/usr/bin/python"
-
 case $1 in
 	start)
 		[ -d $service_base ] && rm -R $service_base
         /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
         touch $lockfile
-		nohup exec $service_file > /tmp/framstore.log
+		nohup /usr/bin/python $service_file > /tmp/framestore.log &
 		;;
 	restart)
 		kill -9 `ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
-		exec $service_file
+		nohup /usr/bin/python $service_file > /tmp/framestore.log &
 		;;
 	status)
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
