@@ -4,7 +4,8 @@ var Firebase = require("firebase"),
 	machineIsLive = MaggieBase.child(".info").child("connected"),
 	exec = require('child_process').exec,
 	fs = require("fs"),
-	async = require("async");
+	async = require("async"),
+	machineBase;
 
 exec("curl -s http://169.254.169.254/latest/meta-data/instance-id",
 	function(error, stdout, stderr) {
@@ -14,8 +15,8 @@ exec("curl -s http://169.254.169.254/latest/meta-data/instance-id",
 		} else {
 			hostname = process.env.HOSTNAME;
 		}
-		var machineBase = FramestoresBase.child(hostname);
-		machineBase.set("Waiting for filesytem...");
+		machineBase = FramestoresBase.child(hostname);
+		machineBase.set("Waiting for filesystem...");
 		machineBase.onDisconnect().remove();
 	});
 
@@ -74,8 +75,12 @@ var mounting = false,
 							}
 						});
 					} else {
-						mounting = false;
 						console.log(error);
+						if (typeof(error)==='string' && error.match(/already mounted/)) {
+							clearInterval(checkForMounted);
+						} else {
+							mounting = false;
+						}
 					}
 				});
 			}
