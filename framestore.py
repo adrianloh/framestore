@@ -31,23 +31,29 @@ def patchData(value):
 	cmd = """curl -sX PATCH -d '%s' %s""" % (json.dumps(value), base)
 	os.popen(cmd).read()
 
+def deleteData(key):
+	base = machineBase + "/" + key + ".json"
+	cmd = """curl -sX DELETE %s""" % base
+	os.popen(cmd).read()
 
 def setStatus(status):
 	setData('status', status)
 
-
 while 1:
 	mountPath = "/media/framestore"
 	isMounted = os.popen("mount | grep " + mountPath).read().strip()
+	keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
 	if isMounted:
 		setStatus("online")
 		res = os.popen("df -h | grep md").read().strip()
 		if res:
-			keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
 			h = dict(zip(keys, res.split()))
 			patchData(h)
+		else:
+			[deleteData(k) for k in keys]
 		sleep(10)
 	else:
+		setStatus("offline")
 		raidReady = os.popen("sudo fdisk -l | grep /dev/md").read().strip()
 		if raidReady:
 			raidPath = re.findall("\/dev\/md\d+", raidReady)[0]
@@ -57,5 +63,4 @@ while 1:
 			setStatus("mounting")
 			os.popen(cmd).read().strip()
 		else:
-			setStatus("offline")
 			sleep(1)
