@@ -49,9 +49,24 @@ def deleteData(key):
 def setStatus(status):
 	setData('status', status)
 
+
 def mdadmName(dev):
 	cmd = "mdadm --detail %s | grep Name | cut -d: -f3 | awk '{print $1}'" % dev
 	return os.popen(cmd).read().strip()
+
+
+def exportNfs(mountPath):
+	cmd = "cat /etc/exports | grep " + mountPath
+	shared = os.popen(cmd).read().strip()
+	if not shared:
+		cmd = """echo '%s  *(rw,async,no_root_squash)' >> /etc/exports""" % mountPath
+		os.popen(cmd).read().strip()
+	nfs_status = os.popen("service nfs status").read().strip()
+	started = re.search("running", nfs_status)
+	if not started:
+		os.popen("service nfs start").read().strip()
+	setStatus("Exporting NFS share " + mountPath)
+	os.popen("exportfs -ar").read().strip()
 
 while 1:
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
@@ -75,16 +90,11 @@ while 1:
 			cmd = "mount -t xfs " + raidPath + " " + mountPath
 			setStatus(cmd)
 			os.popen(cmd).read().strip()
-			cmd = "cat /etc/exports | grep " + mountPath
-			shared = os.popen(cmd).read().strip()
-			if not shared:
-				cmd = """echo '%s  *(rw,async,no_root_squash)' >> /etc/exports""" % mountPath
-				os.popen(cmd).read().strip()
-			setStatus("Exporting NFS share " + mountPath)
-			os.popen("exportfs -ar").read().strip()
+			exportNfs(mountPath)
 	else:
 		setStatus("offline")
 		data = [None for k in keys]
 		h = dict(zip(keys, data))
 		patchData(h)
-		sleep(1)
+
+	sleep(10)
