@@ -2,6 +2,7 @@
 
 import os, re, json
 from time import sleep
+import atexit
 
 base = "https://badabing.firebaseio-demo.com"
 framestoreBase = base + '/framestores'
@@ -20,6 +21,12 @@ cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
 
 
+@atexit.register
+def removeBase():
+	cmd = "curl -X DELETE %s" % machineBase + ".json"
+	os.popen(cmd).read()
+
+
 def setData(key, value):
 	base = machineBase + "/" + key + ".json"
 	cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(value), base)
@@ -31,10 +38,12 @@ def patchData(value):
 	cmd = """curl -sX PATCH -d '%s' %s""" % (json.dumps(value), base)
 	os.popen(cmd).read()
 
+
 def deleteData(key):
 	base = machineBase + "/" + key + ".json"
 	cmd = """curl -sX DELETE %s""" % base
 	os.popen(cmd).read()
+
 
 def setStatus(status):
 	setData('status', status)
