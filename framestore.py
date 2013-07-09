@@ -68,6 +68,7 @@ def exportNfs(mountPath):
 	if os.popen("exportfs -v | grep " + mountPath):
 		setStatus("online")
 	else:
+		setStatus("ready")
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
@@ -76,7 +77,6 @@ def exportNfs(mountPath):
 		os.popen("exportfs -ar").read().strip()
 		sleep(5)
 		exportNfs(mountPath)
-
 
 while 1:
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
@@ -87,7 +87,6 @@ while 1:
 		isMounted = os.popen("mount | grep " + mountPath).read().strip()
 		keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mountedAt"]
 		if isMounted:
-			setStatus("ready")
 			res = os.popen("df -h | grep md").read().strip()
 			if res:
 				data = res.split()
