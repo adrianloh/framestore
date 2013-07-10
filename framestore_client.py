@@ -37,6 +37,11 @@ def mountNfs(hostPath):
 	else:
 		return True
 
+def touch(fname):
+	if os.path.exists(fname):
+		os.utime(fname, None)
+	else:
+		open(fname, 'a').close()
 
 while 1:
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
@@ -66,7 +71,12 @@ while 1:
 						else:
 							mountNfs(publicHostPath)
 					else:
+						touchDir = remoteMountPath + "/connected"
+						touchFile = touchDir + "/" + machine_id
+						if os.path.exists(touchDir):
+							touch(touchFile)
 						log("Already mounted: " + isMounted)
+
 					online[privateHostPath] = data
 					online[publicHostPath] = data
 

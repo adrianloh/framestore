@@ -1,7 +1,7 @@
 #! /usr/bin/env/python
 
 import os, re, json, sys
-from time import sleep, asctime
+from time import sleep, asctime, time
 import atexit
 
 def log(string):
@@ -117,13 +117,20 @@ while 1:
 			log("RAID " + raidPath + " detected.")
 			keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 			if isMounted:
+				touchDir = mountPath + "/connected/"
+				if not os.path.exists(touchDir):
+					os.mkdir(touchDir)
 				log("RAID " + raidPath + " mounted at " + mountPath)
+				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir+f) and time()-os.path.getmtime(touchDir+f)<60]
+				publish = {
+					"clients": len(connected),
+					"files": countFile(mountPath)
+				}
 				res = os.popen("df -h | grep md").read().strip()
 				if res:
 					data = res.split()
-					h = dict(zip(keys, data))
-					h['files'] = countFile(mountPath)
-					patchData(h)
+					publish = dict(zip(keys, data))
+					patchData(publish)
 				exportNfs(mountPath)
 			else:
 				log("Mounting RAID " + raidPath + " to " + mountPath)
