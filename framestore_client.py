@@ -45,6 +45,7 @@ while 1:
 		framestores = framestores.items()
 		log("Discovered " + str(len(framestores)) + " framestores.")
 		for (instance_id, data) in framestores:
+			log(json.dumps(data))
 			if instance_id!=machine_id \
 				and data.has_key('status') \
 				and data.has_key('private_ip') \
@@ -64,10 +65,11 @@ while 1:
 							mountNfs(privateHostPath)
 						else:
 							mountNfs(publicHostPath)
+					else:
+						log("Already mounted: " + isMounted)
 					online[privateHostPath] = data
 					online[publicHostPath] = data
 
-	log(json.dumps(online))
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
 		hostPath = mount[0]
