@@ -1,9 +1,12 @@
 #! /usr/bin/env/python
 
 import os, re, json
-from time import sleep
+from time import sleep, asctime
 from subprocess import Popen
 import atexit
+
+def log(string):
+	print "[ %s ] %s" % (asctime(), string)
 
 base = "https://badabing.firebaseio-demo.com"
 
@@ -24,6 +27,7 @@ def removeBase():
 
 def mountNfs(hostPath):
 	cmd = "mount.nfs4 " + hostPath + " " + remoteMountPath
+	log(cmd)
 	proc = Popen(cmd, shell=True)
 	sleep(10)
 	if proc.poll() is None:
@@ -63,6 +67,7 @@ while 1:
 		localMountPoint = mount[2]
 		if hostPath not in online.keys():
 			cmd = "umount.nfs4 " + localMountPoint + " -fl"
+			log(cmd)
 			os.popen(cmd).read().strip()
 
 	sleep(10)

@@ -16,6 +16,8 @@ case $1 in
 		curl -s https://raw.github.com/adrianloh/framestore/master/framestore_client.sh > $initfile
 		chmod +x $initfile
 		nohup /usr/bin/python $service_file > $logfile &
+        sleep 2
+        proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
             echo -e "\033[32mFramestore client is running ($proc)...\033[0m"
 		else

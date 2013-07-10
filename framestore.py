@@ -1,8 +1,11 @@
 #! /usr/bin/env/python
 
 import os, re, json
-from time import sleep
+from time import sleep, asctime
 import atexit
+
+def log(string):
+	print "[ %s ] %s" % (asctime(), string)
 
 base = "https://badabing.firebaseio-demo.com"
 
@@ -34,6 +37,7 @@ stat = {
 
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
+log("Server " + hostname + " is up @ " + private_ip + ". Broadcasting presence to " + base)
 
 
 @atexit.register
@@ -103,8 +107,10 @@ while 1:
 			# For unlabeled RAID arrays, the raidName will just be the number at the end of /dev/mdX
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
+			log("RAID " + raidPath + " detected.")
 			keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mount"]
 			if isMounted:
+				log("RAID " + raidPath + " mounted at " + mountPath)
 				res = os.popen("df -h | grep md").read().strip()
 				if res:
 					data = res.split()
@@ -113,6 +119,7 @@ while 1:
 					patchData(h)
 				exportNfs(mountPath)
 			else:
+				log("Mounting RAID " + raidPath + " to " + mountPath)
 				if not os.path.exists(mountPath):
 					os.mkdir(mountPath)
 				cmd = "mount -t xfs " + raidPath + " " + mountPath
