@@ -70,9 +70,16 @@ def setStatus(status):
 
 
 def mdadmName(dev):
-	cmd = "mdadm --detail %s | grep Name | cut -d: -f3 | awk '{print $1}'" % dev
-	return os.popen(cmd).read().strip()
-
+	cmd = "mdadm --detail %s | grep Name" % dev
+	raidName = os.popen(cmd).read().strip().split(":")
+	if len(raidName)==2:
+		raidName = raidName[1].strip()
+	else:
+		return None
+	if re.match("^\d+$", raidName) or len(raidName)==0:
+		return None
+	else:
+		return raidName
 
 def exportNfs(mountPath):
 	nfs_status = os.popen("service nfs status").read().strip()
@@ -104,7 +111,7 @@ while 1:
 	if raidReady:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
 		raidName = mdadmName(raidPath)
-		if not re.match("^\d+$", raidName):
+		if raidName:
 			# For unlabeled RAID arrays, the raidName will just be the number at the end of /dev/mdX
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
