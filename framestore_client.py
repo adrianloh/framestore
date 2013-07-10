@@ -78,7 +78,7 @@ while 1:
 			cmd = "umount.nfs4 " + localMountPoint + " -fl"
 			log(cmd)
 			os.popen(cmd).read().strip()
-			newdir = os.path.split(localMountPoint)[0] + "/" + uuid.uuid4().hex
+			newdir = os.path.split(localMountPoint)[0] + "/trash_" + uuid.uuid4().hex
 			os.rename(localMountPoint, newdir)
 
 	sleep(10)
