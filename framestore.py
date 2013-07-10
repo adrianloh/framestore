@@ -122,14 +122,12 @@ while 1:
 					os.mkdir(touchDir)
 				log("RAID " + raidPath + " mounted at " + mountPath)
 				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir+f) and time()-os.path.getmtime(touchDir+f)<60]
-				publish = {
-					"clients": len(connected),
-					"files": countFile(mountPath)
-				}
 				res = os.popen("df -h | grep md").read().strip()
 				if res:
 					data = res.split()
 					publish = dict(zip(keys, data))
+					publish['clients'] = len(connected)
+					publish['files'] = countFile(mountPath)
 					patchData(publish)
 				exportNfs(mountPath)
 			else:
