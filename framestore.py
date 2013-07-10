@@ -72,8 +72,8 @@ def setStatus(status):
 def mdadmName(dev):
 	cmd = "mdadm --detail %s | grep Name" % dev
 	raidName = os.popen(cmd).read().strip().split(":")
-	if len(raidName)==2:
-		raidName = raidName[1].strip()
+	if len(raidName)>1:
+		raidName = raidName[-1].split(" ")[0]
 	else:
 		return None
 	if re.match("^\d+$", raidName) or len(raidName)==0:
@@ -112,7 +112,6 @@ while 1:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
 		raidName = mdadmName(raidPath)
 		if raidName:
-			# For unlabeled RAID arrays, the raidName will just be the number at the end of /dev/mdX
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
 			log("RAID " + raidPath + " detected.")

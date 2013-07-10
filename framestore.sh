@@ -17,16 +17,21 @@ INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 
 case $1 in
 	start)
-		[ -d $service_base ] && rm -R $service_base
-        /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
-		nohup /usr/bin/python $service_file > $logfile &
-        touch $lockfile
-		sleep 2
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
-            echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
+            echo -e "\033[32mFramestore server is already running ($proc)...\033[0m"
 		else
-            echo -e "\033[31mFramestore server failed to start. Check $logfile\033[0m"
+            [ -d $service_base ] && rm -R $service_base
+            /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
+            nohup /usr/bin/python $service_file > $logfile &
+            touch $lockfile
+            sleep 2
+            proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
+            if [ -n "$proc" ]; then
+                echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
+            else
+                echo -e "\033[31mFramestore server failed to start. Check $logfile\033[0m"
+            fi
 		fi
 		;;
 	restart)
