@@ -2,11 +2,16 @@
 # chkconfig: 345 30 01
 # description: framestore notification service
 
-service_base=/tmp/service_framestore
-service_file=$service_base/framestore.py
-lockfile=/var/lock/subsys/framestore
-logfile=/tmp/framestore.log
-initfile=/etc/init.d/framestore
+name=framestore
+service_base=/tmp/service_$name
+service_file=$service_base/$name.py
+lockfile=/var/lock/subsys/$name
+logfile=/tmp/$name.log
+initfile=/etc/init.d/$name
+
+GITBASE=https://raw.github.com/adrianloh/framestore/master
+curl -s $GITBASE/$name.sh > $initfile
+chmod +x $initfile
 
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 
@@ -14,8 +19,6 @@ case $1 in
 	start)
 		[ -d $service_base ] && rm -R $service_base
         /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
-		curl -s https://raw.github.com/adrianloh/framestore/master/framestore.sh > $initfile
-		chmod +x $initfile
 		nohup /usr/bin/python $service_file > $logfile &
         touch $lockfile
 		sleep 2

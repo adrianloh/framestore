@@ -42,7 +42,10 @@ while 1:
 	online = {}
 	if framestores:
 		for (instance_id, data) in framestores.items():
-			if instance_id!=machine_id and data.has_key('status') and data.has_key('private_ip') and data.has_key('public_ip'):
+			if instance_id!=machine_id \
+				and data.has_key('status') \
+				and data.has_key('private_ip') \
+				and data.has_key('public_ip'):
 				status = data['status']
 				private_ip = data['private_ip']
 				public_ip = data['public_ip']

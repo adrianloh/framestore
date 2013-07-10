@@ -8,7 +8,7 @@ fi
 
 if [[ `service nfs status 2>&1` =~ unrecognized ]]; then
     echo -e "\033[33mInstalling NFS services\033[0m"
-	yum -y install portmap nfs-utils git
+	yum -y install portmap nfs-utils
 fi
 
 if [[ `git 2>&1` =~ "command not found" ]]; then
