@@ -5,8 +5,14 @@ from time import sleep
 import atexit
 
 base = "https://badabing.firebaseio-demo.com"
-framestoreBase = base + '/framestores'
 
+try:
+	userData = json.loads(os.popen("curl -s http://169.254.169.254/latest/user-data").read().strip())
+	if isinstance(userData, dict) and userData.has_key('base'):
+		base = userData['base']
+except ValueError: pass
+
+framestoreBase = base + '/framestores'
 meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())
 instance_id = meta['instanceId']
 private_ip = meta['privateIp']
@@ -70,6 +76,7 @@ def exportNfs(mountPath):
 		os.popen("service nfs start").read().strip()
 		sleep(5)
 	if os.popen("exportfs -v | grep " + mountPath):
+		sleep(2)
 		setStatus("online")
 	else:
 		setStatus("ready")
@@ -82,31 +89,35 @@ def exportNfs(mountPath):
 		sleep(5)
 		exportNfs(mountPath)
 
+
 def countFile(path):
 	return int(os.popen("find %s -type f | wc -l" % path).read().strip())
+
 
 while 1:
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
 	if raidReady:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
 		raidName = mdadmName(raidPath)
-		mountPath = "/media/" + raidName
-		isMounted = os.popen("mount | grep " + mountPath).read().strip()
-		keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mount"]
-		if isMounted:
-			res = os.popen("df -h | grep md").read().strip()
-			if res:
-				data = res.split()
-				h = dict(zip(keys, data))
-				h['files'] = countFile(mountPath)
-				patchData(h)
-			exportNfs(mountPath)
-		else:
-			if not os.path.exists(mountPath):
-				os.mkdir(mountPath)
-			cmd = "mount -t xfs " + raidPath + " " + mountPath
-			setStatus(cmd)
-			os.popen(cmd).read().strip()
+		if not re.match("^\d+$", raidName):
+			# For unlabeled RAID arrays, the raidName will just be the number at the end of /dev/mdX
+			mountPath = "/media/" + raidName
+			isMounted = os.popen("mount | grep " + mountPath).read().strip()
+			keys = ['devicePath', "available", "usedSpace", "freeSpace", "usedPercent", "mount"]
+			if isMounted:
+				res = os.popen("df -h | grep md").read().strip()
+				if res:
+					data = res.split()
+					h = dict(zip(keys, data))
+					h['files'] = countFile(mountPath)
+					patchData(h)
+				exportNfs(mountPath)
+			else:
+				if not os.path.exists(mountPath):
+					os.mkdir(mountPath)
+				cmd = "mount -t xfs " + raidPath + " " + mountPath
+				setStatus("mounting")
+				os.popen(cmd).read().strip()
 	else:
 		setStatus("offline")
 		data = [None for k in keys]

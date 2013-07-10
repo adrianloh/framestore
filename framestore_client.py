@@ -6,6 +6,13 @@ from subprocess import Popen
 import atexit
 
 base = "https://badabing.firebaseio-demo.com"
+
+try:
+	userData = json.loads(os.popen("curl -s http://169.254.169.254/latest/user-data").read().strip())
+	if isinstance(userData, dict) and userData.has_key('base'):
+		base = userData['base']
+except ValueError: pass
+
 framestoreBase = base + '/framestores.json'
 machine_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-id").read().strip()
 meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())

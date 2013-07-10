@@ -36,7 +36,7 @@ case $1 in
 			[ -f $lockfile ] && rm -f $lockfile
 			echo Framestore client is stopped
 		else
-			echo Framestore client is already stopped
+			echo Framestore client is not running
 		fi
 		;;
 esac

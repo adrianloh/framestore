@@ -38,7 +38,7 @@ case $1 in
 			curl -sX DELETE $URL > /dev/null
 			echo Framestore is stopped
 		else
-			echo Framestore is already stopped
+			echo Framestore is not running
 		fi
 		;;
 esac
