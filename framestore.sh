@@ -5,7 +5,7 @@
 service_base=/tmp/service_framestore
 service_file=$service_base/framestore.py
 lockfile=/var/lock/subsys/framestore
-logile=/tmp/framestore.log
+logfile=/tmp/framestore.log
 initfile=/etc/init.d/framestore
 
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
