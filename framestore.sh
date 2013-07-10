@@ -5,8 +5,8 @@
 service_base=/tmp/service_framestore
 service_file=$service_base/framestore.py
 lockfile=/var/lock/subsys/framestore
+logile=/tmp/framestore.log
 
-BASE=https://badabing.firebaseio-demo.com
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 URL=$BASE/framestores/$INSTANCE_ID.json
 
@@ -15,18 +15,26 @@ case $1 in
 		[ -d $service_base ] && rm -R $service_base
         /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
         touch $lockfile
-		nohup /usr/bin/python $service_file > /tmp/framestore.log &
+		export BASE=`usr/bin/python $service_base/getbase.py`
+		nohup /usr/bin/python $service_file > $logfile &
+		sleep 5
+		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
+		if [ -n "$proc" ]; then
+            echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
+		else
+            echo -e "\033[31mFramestore server failed to start. Check $logfile\033[0m"
+		fi
 		;;
 	restart)
 		kill -9 `ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
-		nohup /usr/bin/python $service_file > /tmp/framestore.log &
+		nohup /usr/bin/python $service_file > $logfile &
 		;;
 	status)
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
-			echo Framestore is running \($proc\)...
+            echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
 		else
-			echo Framestore is stopped
+            echo -e "\033[31mFramestore server is stopped\033[0m"
 		fi
 		;;
     stop)

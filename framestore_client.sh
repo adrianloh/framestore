@@ -15,6 +15,11 @@ case $1 in
 		/usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
 		touch $lockfile
 		nohup /usr/bin/python $service_file > $logfile &
+		if [ -n "$proc" ]; then
+            echo -e "\033[32mFramestore client is running ($proc)...\033[0m"
+		else
+            echo -e "\033[31mFramestore client failed to start. Check $logfile\033[0m"
+		fi
 		;;
 	restart)
 		kill -9 `ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
@@ -23,9 +28,9 @@ case $1 in
 	status)
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
-			echo Framestore client is listening \($proc\)...
+            echo -e "\033[32mFramestore client is running ($proc)...\033[0m"
 		else
-			echo Framestore client is stopped
+            echo -e "\033[31mFramestore client is stopped\033[0m"
 		fi
 		;;
     stop)
