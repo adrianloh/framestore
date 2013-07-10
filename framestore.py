@@ -1,11 +1,12 @@
 #! /usr/bin/env/python
 
-import os, re, json
+import os, re, json, sys
 from time import sleep, asctime
 import atexit
 
 def log(string):
-	print "[ %s ] %s" % (asctime(), string)
+	msg = "[ %s ] %s" % (asctime(), string)
+	sys.stderr.write(msg + "\n")
 
 base = "https://badabing.firebaseio-demo.com"
 
@@ -87,7 +88,7 @@ def exportNfs(mountPath):
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
-			cmd = """echo '%s  *(rw,async,no_root_squash)' >> /etc/exports""" % mountPath
+			cmd = """echo "%s  *(rw,async,no_root_squash)" >> /etc/exports""" % mountPath
 			os.popen(cmd).read().strip()
 		os.popen("exportfs -ar").read().strip()
 		sleep(5)
