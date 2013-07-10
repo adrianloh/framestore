@@ -115,7 +115,7 @@ while 1:
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
 			log("RAID " + raidPath + " detected.")
-			keys = ['devicePath', "capacity", "usedSpace", "freeSpace", "usedPercent", "mount"]
+			keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 			if isMounted:
 				log("RAID " + raidPath + " mounted at " + mountPath)
 				res = os.popen("df -h | grep md").read().strip()
