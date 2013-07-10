@@ -42,10 +42,10 @@ case $1 in
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
 			kill -9 $proc
-			[ -d $service_base ] && rm -R $service_base
-			[ -f $lockfile ] && rm -f $lockfile
     		base=`usr/bin/python $service_base/getbase.py`
 			curl -sX DELETE $base/framestores/$INSTANCE_ID.json > /dev/null
+			[ -d $service_base ] && rm -R $service_base
+			[ -f $lockfile ] && rm -f $lockfile
 			echo Framestore is stopped
 		else
 			echo Framestore is not running
