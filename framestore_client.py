@@ -58,8 +58,8 @@ while 1:
 							mountNfs(privateHostPath)
 						else:
 							mountNfs(publicHostPath)
-					online[private_ip] = data
-					online[public_ip] = data
+					online[privateHostPath] = data
+					online[publicHostPath] = data
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
