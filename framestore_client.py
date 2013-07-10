@@ -1,6 +1,6 @@
 #! /usr/bin/env/python
 
-import os, re, json, sys
+import os, re, json, sys, uuid
 from time import sleep, asctime
 from subprocess import Popen
 import atexit
@@ -78,5 +78,7 @@ while 1:
 			cmd = "umount.nfs4 " + localMountPoint + " -fl"
 			log(cmd)
 			os.popen(cmd).read().strip()
+			newdir = os.path.split(localMountPoint)[0] + "/" + uuid.uuid4().hex
+			os.rename(localMountPoint, newdir)
 
 	sleep(10)
