@@ -44,6 +44,7 @@ case $1 in
 			kill -9 $proc
 			[ -d $service_base ] && rm -R $service_base
 			[ -f $lockfile ] && rm -f $lockfile
+    		base=`usr/bin/python $service_base/getbase.py`
 			curl -sX DELETE $base/framestores/$INSTANCE_ID.json > /dev/null
 			echo Framestore is stopped
 		else
