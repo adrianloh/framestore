@@ -71,9 +71,10 @@ def setStatus(status):
 
 def mdadmName(dev):
 	cmd = "mdadm --detail %s | grep Name" % dev
-	raidName = os.popen(cmd).read().strip().split(":")
-	if len(raidName)>1:
-		raidName = raidName[-1].split(" ")[0]
+	raidName = os.popen(cmd).read().strip()
+	log("RAID name: " + json.dumps(raidName))
+	if len(raidName.split(":"))>1:
+		raidName = raidName.split(":")[-1].split(" ")[0]
 	else:
 		return None
 	if re.match("^\d+$", raidName) or len(raidName)==0:
