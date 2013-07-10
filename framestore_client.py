@@ -1,12 +1,13 @@
 #! /usr/bin/env/python
 
-import os, re, json
+import os, re, json, sys
 from time import sleep, asctime
 from subprocess import Popen
 import atexit
 
 def log(string):
-	print "[ %s ] %s" % (asctime(), string)
+	msg = "[ %s ] %s" % (asctime(), string)
+	sys.stderr.write(msg + "\n")
 
 base = "https://badabing.firebaseio-demo.com"
 
@@ -41,7 +42,9 @@ while 1:
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
 	online = {}
 	if framestores:
-		for (instance_id, data) in framestores.items():
+		framestores = framestores.items()
+		log("Discovered " + str(len(framestores)) + " framestores.")
+		for (instance_id, data) in framestores:
 			if instance_id!=machine_id \
 				and data.has_key('status') \
 				and data.has_key('private_ip') \
@@ -64,6 +67,7 @@ while 1:
 					online[privateHostPath] = data
 					online[publicHostPath] = data
 
+	log(json.dumps(online))
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
 		hostPath = mount[0]
