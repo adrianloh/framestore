@@ -6,14 +6,18 @@ service_base=/tmp/service_framestore_client
 service_file=$service_base/framestore_client.py
 lockfile=/var/lock/subsys/framestore_client
 logfile=/tmp/framestore_client.log
-
-BASE=https://badabing.firebaseio-demo.com
+initfile=/etc/init.d/framestore_client
 
 case $1 in
 	start)
 		[ -d $service_base ] && rm -R $service_base
 		/usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
 		touch $lockfile
+
+		export BASE=`usr/bin/python $service_base/getbase.py`
+		curl -s https://raw.github.com/adrianloh/framestore/master/framestore_client.sh > $initfile
+		chmod +x $initfile
+
 		nohup /usr/bin/python $service_file > $logfile &
 		if [ -n "$proc" ]; then
             echo -e "\033[32mFramestore client is running ($proc)...\033[0m"
