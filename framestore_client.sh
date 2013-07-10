@@ -13,11 +13,8 @@ case $1 in
 		[ -d $service_base ] && rm -R $service_base
 		/usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
 		touch $lockfile
-
-		export BASE=`usr/bin/python $service_base/getbase.py`
 		curl -s https://raw.github.com/adrianloh/framestore/master/framestore_client.sh > $initfile
 		chmod +x $initfile
-
 		nohup /usr/bin/python $service_file > $logfile &
 		if [ -n "$proc" ]; then
             echo -e "\033[32mFramestore client is running ($proc)...\033[0m"

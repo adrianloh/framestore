@@ -18,7 +18,7 @@ case $1 in
 		chmod +x $initfile
 		nohup /usr/bin/python $service_file > $logfile &
         touch $lockfile
-		sleep 5
+		sleep 2
 		proc=`ps ax | grep $service_file | grep -v grep | awk '{print $1}'`
 		if [ -n "$proc" ]; then
             echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
