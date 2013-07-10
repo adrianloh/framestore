@@ -75,7 +75,7 @@ def exportNfs(mountPath):
 	if not started:
 		os.popen("service nfs start").read().strip()
 		sleep(5)
-	if os.popen("exportfs -v | grep " + mountPath):
+	if os.popen("exportfs -v | grep " + mountPath).read().strip():
 		sleep(2)
 		setStatus("online")
 	else:
