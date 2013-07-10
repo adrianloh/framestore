@@ -14,12 +14,8 @@ case $1 in
 	start)
 		[ -d $service_base ] && rm -R $service_base
         /usr/bin/git clone https://github.com/adrianloh/framestore.git $service_base 2>/dev/null 1>/dev/null
-
-		export base=`usr/bin/python $service_base/getbase.py`
-        export URL=$base/framestores/$INSTANCE_ID.json
 		curl -s https://raw.github.com/adrianloh/framestore/master/framestore.sh > $initfile
 		chmod +x $initfile
-
 		nohup /usr/bin/python $service_file > $logfile &
         touch $lockfile
 		sleep 5
@@ -48,7 +44,7 @@ case $1 in
 			kill -9 $proc
 			[ -d $service_base ] && rm -R $service_base
 			[ -f $lockfile ] && rm -f $lockfile
-			curl -sX DELETE $URL > /dev/null
+			curl -sX DELETE $base/framestores/$INSTANCE_ID.json > /dev/null
 			echo Framestore is stopped
 		else
 			echo Framestore is not running
