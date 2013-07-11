@@ -45,13 +45,15 @@ die() {
 	proc=`getProc`
 	if [ -n "$proc" ]; then
 		kill -9 ${proc}
-        res=`curl -s http://169.254.169.254/latest/user-data | grep base=`
+		res=`curl -s http://169.254.169.254/latest/user-data | grep base=`
 		if [ -n "${res}" ]; then
 			base=`echo ${res} | cut -d= -f2`
 		else
 			base=${DEFAULT_BASE}
 		fi
-		curl -sX DELETE ${base}/framestores/${INSTANCE_ID}.json > /dev/null
+		url="${base}/framestores/${INSTANCE_ID}.json"
+		echo ${url}
+		curl -sX DELETE ${url} > /dev/null
 		[ -d ${service_base} ] && rm -R ${service_base}
 		[ -f ${lockfile} ] && rm -f ${lockfile}
 		echo "${name} is stopped"
