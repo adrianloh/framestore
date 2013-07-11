@@ -34,7 +34,7 @@ done
 
 echo -e "\033[33mInstalling ${name}\033[0m"
 initfile=/etc/init.d/${name}
-if [[ name =~ "client" ]]; then
+if [[ ${name} =~ "client" ]]; then
 	curl -s ${initscript} | sed -e 's|name=framestore|name=framestore-client|' > ${initfile}
 else
 	curl -s ${initscript} > ${initfile}
@@ -42,7 +42,7 @@ fi
 
 chmod +x ${initfile}
 
-if [[ name =~ "client" ]]; then
+if [[ ${name} =~ "client" ]]; then
 	echo ""
 else
 	echo -e "\033[33mHacking sshd to stop broadcast\033[0m"
