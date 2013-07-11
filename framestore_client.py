@@ -5,26 +5,44 @@ from time import sleep, asctime
 from subprocess import Popen
 import atexit
 
+amazon = {
+	"instance-id": "http://169.254.169.254/latest/meta-data/instance-id",
+	"public-ip": "http://169.254.169.254/latest/meta-data/public-ipv4",
+	"hostname": "http://169.254.169.254/latest/meta-data/public-hostname",
+	"dynamic": "http://169.254.169.254/latest/dynamic/instance-identity/document",
+	"user-data": "http://169.254.169.254/latest/user-data"
+}
+
+machine_id = os.popen("curl -s " + amazon['instance-id']).read().strip()
+
 def log(string):
-	msg = "[ %s ] %s" % (asctime(), string)
+	msg = "[ %s ] [ %s ] %s" % (asctime(), machine_id, string)
 	sys.stderr.write(msg + "\n")
 
 base = "https://badabing.firebaseio-demo.com"
 
 try:
-	userData = json.loads(os.popen("curl -s http://169.254.169.254/latest/user-data").read().strip())
+	userData = json.loads(os.popen("curl -s " + amazon['user-data']).read().strip())
 	if isinstance(userData, dict) and userData.has_key('base'):
 		base = userData['base']
-except ValueError: pass
+	else:
+		raise ValueError
+except ValueError:
+	log("WARNING: Using default Firebase: " + base)
 
 framestoreBase = base + '/framestores.json'
-machine_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-id").read().strip()
-meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())
-zone = meta['availabilityZone']
+try:
+	meta = json.loads(os.popen("curl -s " + amazon['dynamic']).read().strip())
+	zone = meta['availabilityZone']
+except ValueError:
+	log("FATAL: Amazon metadata error.")
+	exit(1)
 
 pidfile = "/var/run/framestore_client.pid"
 with open(pidfile, 'w') as f:
 	f.write(str(os.getpid()))
+
+log("Framestore client started.")
 
 @atexit.register
 def removeBase():

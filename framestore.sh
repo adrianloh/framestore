@@ -9,13 +9,13 @@ lockfile=/var/lock/subsys/${name}
 pidfile=/var/run/${name}.pid
 logfile=/tmp/${name}.log
 
-initscript="https://raw.github.com/adrianloh/framestore/master/${name}.sh"
+GITBASE="https://github.com/adrianloh/framestore.git"
+INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+
+initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/${name}.sh|"`
 initfile=/etc/init.d/${name}
 curl -s ${initscript} > ${initfile}
 chmod +x ${initfile}
-
-GITBASE="https://github.com/adrianloh/framestore.git"
-INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 
 getProc () {
 	echo `ps ax | grep ${service_file} | grep -v grep | awk '{print $1}'`;
@@ -24,7 +24,7 @@ getProc () {
 launch() {
 	cd ${service_base}
 	version=`/usr/bin/git log --oneline | head -n1 | awk '{print $1}'`
-	echo -e "\033[33mFramestore server starting... ($version)...\033[0m"
+	echo -e "\033[33mFramestore server starting ($version)...\033[0m"
 	nohup /usr/bin/python ${service_file} > ${logfile} &
 	touch ${lockfile}
 	sleep 5
@@ -44,9 +44,9 @@ die() {
 		curl -sX DELETE ${base}/framestores/${INSTANCE_ID}.json > /dev/null
 		[ -d ${service_base} ] && rm -R ${service_base}
 		[ -f ${lockfile} ] && rm -f ${lockfile}
-		echo Framestore is stopped
+		echo "Framestore is stopped"
 	else
-		echo Framestore is not running
+		echo "Framestore is not running"
 	fi
 }
 
@@ -57,7 +57,6 @@ case $1 in
 			echo -e "\033[32mFramestore server is already running ($proc)...\033[0m"
 		else
 			[ -d ${service_base} ] && rm -R ${service_base}
-			[ -f ${pidfile} ] && rm ${pidfile}
 			/usr/bin/git clone ${GITBASE} ${service_base} 2>/dev/null 1>/dev/null
 			launch
 		fi
