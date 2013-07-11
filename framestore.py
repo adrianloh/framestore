@@ -40,6 +40,9 @@ cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 os.popen(cmd).read()
 log("Server " + hostname + " is up @ " + private_ip + ". Broadcasting presence to " + base)
 
+pidfile = "/var/run/framestore.pid"
+with open(pidfile, 'w') as f:
+	f.write(str(os.getpid()))
 
 @atexit.register
 def removeBase():
@@ -105,8 +108,17 @@ def exportNfs(mountPath):
 def countFile(path):
 	return int(os.popen("find %s -type f | wc -l" % path).read().strip())
 
+def touch(fname):
+	try:
+		if os.path.exists(fname):
+			os.utime(fname, None)
+		else:
+			with open(fname, 'w') as f:
+				f.write("")
+	except (OSError, IOError): pass
 
 while 1:
+	touch(pidfile)
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
 	if raidReady:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
@@ -121,6 +133,7 @@ while 1:
 				if not os.path.exists(touchDir):
 					os.mkdir(touchDir)
 				log("RAID " + raidPath + " mounted at " + mountPath)
+				# netstat -vat | grep ".*nfs.*ESTABLISHED"
 				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir+f) and time()-os.path.getmtime(touchDir+f)<60]
 				res = os.popen("df -h | grep md").read().strip()
 				if res:
@@ -143,4 +156,5 @@ while 1:
 		h = dict(zip(keys, data))
 		patchData(h)
 
+	touch(pidfile)
 	sleep(6)

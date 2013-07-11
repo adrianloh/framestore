@@ -22,6 +22,10 @@ machine_id = os.popen("curl -s http://169.254.169.254/latest/meta-data/instance-
 meta = json.loads(os.popen("curl -s 169.254.169.254/latest/dynamic/instance-identity/document/").read().strip())
 zone = meta['availabilityZone']
 
+pidfile = "/var/run/framestore_client.pid"
+with open(pidfile, 'w') as f:
+	f.write(str(os.getpid()))
+
 @atexit.register
 def removeBase():
 	pass
@@ -38,12 +42,16 @@ def mountNfs(hostPath):
 		return True
 
 def touch(fname):
-	if os.path.exists(fname):
-		os.utime(fname, None)
-	else:
-		open(fname, 'a').close()
+	try:
+		if os.path.exists(fname):
+			os.utime(fname, None)
+		else:
+			with open(fname, 'w') as f:
+				f.write("")
+	except (OSError, IOError): pass
 
 while 1:
+	touch(pidfile)
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
 	online = {}
 	if framestores:
@@ -90,5 +98,5 @@ while 1:
 			os.popen(cmd).read().strip()
 			newdir = os.path.split(localMountPoint)[0] + "/trash_" + uuid.uuid4().hex
 			os.rename(localMountPoint, newdir)
-
+	touch(pidfile)
 	sleep(10)
