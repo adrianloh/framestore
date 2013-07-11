@@ -34,7 +34,7 @@ done
 
 echo -e "\033[33mInstalling ${name}\033[0m"
 initfile=/etc/init.d/${name}
-echo curl -s ${initscript} | awk '/SERVICE_TYPE/{if (M==""){sub("SERVICE_TYPE",name);M=1}}{print}' name=${name} > ${initfile}
+curl -s ${initscript} | awk '/SERVICE_TYPE/{if (M==""){sub("SERVICE_TYPE",name);M=1}}{print}' name=${name} > ${initfile}
 chmod +x ${initfile}
 
 if [[ ${name} =~ "client" ]]; then
