@@ -15,7 +15,6 @@ INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 DEFAULT_BASE="https://badabing.firebaseio-demo.com"
 
 initfile=/etc/init.d/${name}
-
 initscript="${RAWBASE}/framestore.sh"
 curl -s ${initscript} | sed "s|SERVICE_TYPE|${name}|" > ${initfile}
 chmod +x ${initfile}
