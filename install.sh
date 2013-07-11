@@ -1,5 +1,10 @@
 #! /bin/sh
 
+if [[ ! $1 =~ "framestore" ]]; then
+	echo -e "\033[31mInvalid instllation specified. Use either 'framestore' or 'framestore-client'\033[0m"
+	exit 1
+fi
+
 name=$1
 
 GITBASE="https://github.com/adrianloh/framestore.git"

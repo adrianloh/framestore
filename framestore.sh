@@ -1,4 +1,6 @@
 #!/bin/sh
+# chkconfig: 345 30 01
+# description: framestore notification service
 
 name=framestore
 service_base=/tmp/service_${name}
