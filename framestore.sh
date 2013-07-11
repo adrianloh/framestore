@@ -11,7 +11,6 @@ logfile=/tmp/${name}.log
 
 initscript="https://raw.github.com/adrianloh/framestore/master/${name}.sh"
 initfile=/etc/init.d/${name}
-echo ${initscript}
 curl -s ${initscript} > ${initfile}
 chmod +x ${initfile}
 
@@ -76,6 +75,6 @@ case $1 in
 		fi
 		;;
     stop)
-		die
+		`die`
 		;;
 esac
