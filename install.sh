@@ -55,5 +55,7 @@ ln -fs ${initfile} /etc/rc3.d/S30${name}
 chkconfig --add ${name}
 chkconfig ${name} on
 
+exit 0
+
 echo -e "\033[33mBooting ${name}\033[0m"
 service ${name} start
