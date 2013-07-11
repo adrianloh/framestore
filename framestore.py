@@ -110,10 +110,10 @@ def exportNfs(mountPath):
 	if not started:
 		log("NFS service is down. Restarting...")
 		res = os.popen("for serv in rpcbind nfs nfslock; do service ${serv} start; done").read().strip()
-		if not re.match("OK", res):
+		if not re.search("OK", res):
 			log("WARNING: NFS service failed to start.")
 		sleep(5)
-	nfs_listening = os.popen("netstat -vta | grep nfs").read().strip()
+	nfs_listening = os.popen("netstat -vat | grep nfs.*LISTEN").read().strip()
 	nfs_exporting = os.popen("exportfs -v | grep " + mountPath).read().strip()
 	if nfs_listening and nfs_exporting:
 		log("NFS share is online: " + mountPath)
@@ -162,7 +162,7 @@ while 1:
 				if not os.path.exists(touchDir):
 					os.mkdir(touchDir)
 				log("RAID mounted: " + mountPath)
-				# netstat -vat | grep ".*nfs.*ESTABLISHED"
+				# netstat -vat | grep nfs.*ESTABLISHED
 				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir + f) and time() - os.path.getmtime(touchDir + f) < 60]
 				res = os.popen("df -h | grep md").read().strip()
 				if res:

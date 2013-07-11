@@ -38,7 +38,7 @@ except ValueError:
 	log("FATAL: Amazon metadata error.")
 	exit(1)
 
-pidfile = "/var/run/framestore_client.pid"
+pidfile = "/var/run/framestore-client.pid"
 with open(pidfile, 'w') as f:
 	f.write(str(os.getpid()))
 

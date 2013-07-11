@@ -1,9 +1,9 @@
 #! /bin/sh
 
-name=framestore
-GITBASE="https://github.com/adrianloh/framestore.git"
+name=$1
 
-initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/${name}.sh|"`
+GITBASE="https://github.com/adrianloh/framestore.git"
+initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/framestore.sh|"`
 
 if [ `id -u` -ne 0 ]
 then
@@ -26,15 +26,20 @@ for serv in rpcbind nfs nfslock; do
 	chkconfig ${serv} on && service ${serv} start;
 done
 
-echo -e "\033[33mInstalling Framestore server\033[0m"
+echo -e "\033[33mInstalling ${name}\033[0m"
 initfile=/etc/init.d/${name}
-curl -s ${initscript} > ${initfile}
+if [[ name =~ "client" ]]; then
+	curl -s ${initscript} | sed -e 's|name=framestore|name=framestore-client|' > ${initfile}
+else
+	curl -s ${initscript} > ${initfile}
+fi
+
 chmod +x ${initfile}
 
-echo -e "\033[33mSetting Framestore to run at startup\033[0m"
+echo -e "\033[33mSetting ${name} to run at startup\033[0m"
 ln -fs ${initfile} /etc/rc3.d/S30${name}
 chkconfig --add ${name}
 chkconfig ${name} on
 
-echo -e "\033[33mBooting Framestore server\033[0m"
+echo -e "\033[33mBooting ${name}\033[0m"
 service ${name} start
