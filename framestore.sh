@@ -13,11 +13,10 @@ DEFAULT_BASE="https://badabing.firebaseio-demo.com"
 
 initfile=/etc/init.d/${name}
 
+initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/framestore.sh|"`
 if [[ name =~ "client" ]]; then
-	initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/framestore.sh|"`
 	curl -s ${initscript} | sed -e 's|name=framestore|name=framestore-client|' > ${initfile}
 else
-	initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/${name}.sh|"`
 	curl -s ${initscript} > ${initfile}
 fi
 
