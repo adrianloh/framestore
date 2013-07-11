@@ -1,14 +1,15 @@
 #! /bin/sh
 
 if [[ ! $1 =~ "framestore" ]]; then
-	echo -e "\033[31mInvalid instllation specified. Use either 'framestore' or 'framestore-client'\033[0m"
+	echo -e "\033[31mInvalid installation specified. Use either 'framestore' or 'framestore-client'\033[0m"
 	exit 1
 fi
 
 name=$1
 
 GITBASE="https://github.com/adrianloh/framestore.git"
-initscript=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master/framestore.sh|"`
+RAWBASE=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master|"`
+initscript="${RAWBASE}/framestore.sh"
 
 if [ `id -u` -ne 0 ]
 then
@@ -40,6 +41,8 @@ else
 fi
 
 chmod +x ${initfile}
+
+curl -s "${RAWBASE}/rc.local" >> /etc/rc.local
 
 echo -e "\033[33mSetting ${name} to run at startup\033[0m"
 ln -fs ${initfile} /etc/rc3.d/S30${name}

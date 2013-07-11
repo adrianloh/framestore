@@ -54,7 +54,7 @@ die() {
 			base=${DEFAULT_BASE}
 		fi
 		url="${base}/framestores/${INSTANCE_ID}.json"
-		echo "[ \033[31mSTOP033[0m ] broadcast: ${url}"
+		echo -e "[ \033[31mSTOP\033[0m ] broadcast: ${url}"
 		curl -sX DELETE ${url} > /dev/null
 		[ -d ${service_base} ] && rm -R ${service_base}
 		[ -f ${lockfile} ] && rm -f ${lockfile}
