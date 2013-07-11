@@ -9,6 +9,7 @@ logfile=/tmp/${name}.log
 
 GITBASE="https://github.com/adrianloh/framestore.git"
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
+DEFAULT_BASE="https://badabing.firebaseio-demo.com"
 
 initfile=/etc/init.d/${name}
 
@@ -45,7 +46,12 @@ die() {
 	proc=`getProc`
 	if [ -n "$proc" ]; then
 		kill -9 ${proc}
-        base=`/usr/bin/python ${service_base}/getbase.py`
+        res=`curl -s http://169.254.169.254/latest/user-data | grep base=`
+		if [ -n "${res}" ]; then
+			base=`echo ${res} | cut -d= -f2`
+		else
+			base=${DEFAULT_BASE}
+		fi
 		curl -sX DELETE ${base}/framestores/${INSTANCE_ID}.json > /dev/null
 		[ -d ${service_base} ] && rm -R ${service_base}
 		[ -f ${lockfile} ] && rm -f ${lockfile}
