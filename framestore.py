@@ -149,10 +149,10 @@ def touch(fname):
 while 1:
 	touch(pidfile)
 	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
+	keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 	if raidReady:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
 		raidName = mdadmName(raidPath)
-		keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 		if raidName:
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
