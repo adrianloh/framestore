@@ -21,14 +21,13 @@ def log(string):
 
 base = "https://badabing.firebaseio-demo.com"
 
-try:
-	userData = json.loads(os.popen("curl -s " + amazon['user-data']).read().strip())
-	if isinstance(userData, dict) and userData.has_key('base'):
-		base = userData['base']
-	else:
-		raise ValueError
-except ValueError:
+cmd = "curl -s %s | grep base=" % amazon['user-data']
+userbase = os.popen(cmd).read().strip()
+if userbase:
+	base = userbase.split("=")[1]
+else:
 	log("WARNING: Using default Firebase: " + base)
+
 
 framestoreBase = base + '/framestores.json'
 try:
