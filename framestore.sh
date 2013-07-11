@@ -16,7 +16,7 @@ DEFAULT_BASE="https://badabing.firebaseio-demo.com"
 
 initfile=/etc/init.d/${name}
 initscript="${RAWBASE}/framestore.sh"
-curl -s ${initscript} | sed "s|SERVICE_TYPE|${name}|" > ${initfile}
+curl -s ${initscript} | sed "0,|SERVICE_TYPE|s|SERVICE_TYPE|${name}|" > ${initfile}
 chmod +x ${initfile}
 
 getProc () {
