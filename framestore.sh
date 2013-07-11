@@ -2,7 +2,7 @@
 # chkconfig: 345 30 01
 # description: framestore notification service
 
-name=framestore
+name=SERVICE_TYPE
 service_base=/tmp/service_${name}
 service_file=${service_base}/${name}.py
 lockfile=/var/lock/subsys/${name}
@@ -17,12 +17,7 @@ DEFAULT_BASE="https://badabing.firebaseio-demo.com"
 initfile=/etc/init.d/${name}
 
 initscript="${RAWBASE}/framestore.sh"
-if [[ name =~ "client" ]]; then
-	curl -s ${initscript} | sed -e 's|name=framestore|name=framestore-client|' > ${initfile}
-else
-	curl -s ${initscript} > ${initfile}
-fi
-
+curl -s ${initscript} | sed "s|SERVICE_TYPE|${name}|" > ${initfile}
 chmod +x ${initfile}
 
 getProc () {
