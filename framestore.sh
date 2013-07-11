@@ -29,6 +29,7 @@ launch() {
 	touch ${lockfile}
 	sleep 5
 	if [ -f ${pidfile} ]; then
+		proc=`cat ${pidfile}`
 		echo -e "\033[32mFramestore server is running ($proc)...\033[0m"
 	else
 		echo -e "\033[31mFramestore server failed to start. Check $logfile\033[0m"
@@ -75,6 +76,6 @@ case $1 in
 		fi
 		;;
     stop)
-		`die`
+		die
 		;;
 esac
