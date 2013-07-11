@@ -109,9 +109,13 @@ def exportNfs(mountPath):
 	started = re.search("running", nfs_status)
 	if not started:
 		log("NFS service is down. Restarting...")
-		os.popen("service nfs start").read().strip()
+		res = os.popen("for serv in rpcbind nfs nfslock; do service ${serv} start; done").read().strip()
+		if not re.match("OK", res):
+			log("WARNING: NFS service failed to start.")
 		sleep(5)
-	if os.popen("exportfs -v | grep " + mountPath).read().strip():
+	nfs_listening = os.popen("netstat -vta | grep nfs").read().strip()
+	nfs_exporting = os.popen("exportfs -v | grep " + mountPath).read().strip()
+	if nfs_listening and nfs_exporting:
 		log("NFS share is online: " + mountPath)
 		sleep(2)
 		setStatus("online")
