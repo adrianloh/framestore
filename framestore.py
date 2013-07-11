@@ -152,11 +152,11 @@ while 1:
 	if raidReady:
 		raidPath = re.findall("/dev/md\d+", raidReady)[0]
 		raidName = mdadmName(raidPath)
+		keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 		if raidName:
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
 			log("RAID present: " + raidPath)
-			keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
 			if isMounted:
 				touchDir = mountPath + "/connected/"
 				if not os.path.exists(touchDir):
