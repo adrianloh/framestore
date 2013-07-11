@@ -37,6 +37,12 @@ initfile=/etc/init.d/${name}
 curl -s ${initscript} | awk '/SERVICE_TYPE/{if (M==""){sub("SERVICE_TYPE",name);M=1}}{print}' name=${name} > ${initfile}
 chmod +x ${initfile}
 
+service_set=`cat ${initfile} | grep name=${name}`
+if [ -z "${service_set}" ]; then
+	echo "init file error"
+	exit 1
+fi
+
 if [[ ${name} =~ "client" ]]; then
 	echo ""
 else
