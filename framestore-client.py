@@ -70,38 +70,40 @@ while 1:
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
 	online = {}
 	if framestores:
-		framestores = framestores.items()
-		log("Discovered " + str(len(framestores)) + " framestores.")
-		for (instance_id, filesystems) in framestores:
+		log("Discovered " + str(len(framestores.items())) + " framestore(s).")
+		for instance_id in framestores.keys():
 			if instance_id!=machine_id:
-				for (raidName, data) in filesystems.items():
-					if data.has_key('status') \
-						and data.has_key('private_ip') \
-						and data.has_key('public_ip'):
-						status = data['status']
-						private_ip = data['private_ip']
-						public_ip = data['public_ip']
-						if status=='online' and data.has_key('mount'):
-							remoteMountPath = data['mount']
-							privateHostPath = private_ip + ":" + remoteMountPath
-							publicHostPath = public_ip + ":" + remoteMountPath
-							isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
-							if not isMounted:
-								if not os.path.exists(remoteMountPath):
-									os.mkdir(remoteMountPath)
-								if zone==data['zone']:
-									mountNfs(privateHostPath)
+				machine = framestores[instance_id]
+				if machine.has_key('filesystems'):
+					for fs_name in machine['filesystems'].keys():
+						data = machine['filesystems'][fs_name]
+						if data.has_key('status') \
+							and data.has_key('private_ip') \
+							and data.has_key('public_ip'):
+							status = data['status']
+							private_ip = data['private_ip']
+							public_ip = data['public_ip']
+							if status=='online' and data.has_key('mount'):
+								remoteMountPath = data['mount']
+								privateHostPath = private_ip + ":" + remoteMountPath
+								publicHostPath = public_ip + ":" + remoteMountPath
+								isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
+								if not isMounted:
+									if not os.path.exists(remoteMountPath):
+										os.mkdir(remoteMountPath)
+									if zone==data['zone']:
+										mountNfs(privateHostPath)
+									else:
+										mountNfs(publicHostPath)
 								else:
-									mountNfs(publicHostPath)
-							else:
-								touchDir = remoteMountPath + "/.connected"
-								touchFile = touchDir + "/" + machine_id
-								if os.path.exists(touchDir):
-									touch(touchFile)
-								log("Already mounted: " + isMounted)
+									touchDir = remoteMountPath + "/.connected"
+									touchFile = touchDir + "/" + machine_id
+									if os.path.exists(touchDir):
+										touch(touchFile)
+									log("Already mounted: " + isMounted)
 
-							online[privateHostPath] = data
-							online[publicHostPath] = data
+								online[privateHostPath] = data
+								online[publicHostPath] = data
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
