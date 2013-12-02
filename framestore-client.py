@@ -76,22 +76,22 @@ while 1:
 				machine = framestores[instance_id]
 				if machine.has_key('filesystems'):
 					for fs_name in machine['filesystems'].keys():
-						data = machine['filesystems'][fs_name]
-						if data.has_key('status') \
-							and data.has_key('private_ip') \
-							and data.has_key('public_ip'):
-							status = data['status']
-							private_ip = data['private_ip']
-							public_ip = data['public_ip']
-							if status=='online' and data.has_key('mount'):
-								remoteMountPath = data['mount']
+						fs_details = machine['filesystems'][fs_name]
+						if fs_details.has_key('status') \
+							and machine.has_key('private_ip') \
+							and machine.has_key('public_ip'):
+							status = fs_details['status']
+							private_ip = machine['private_ip']
+							public_ip = machine['public_ip']
+							if status=='online' and fs_details.has_key('mount'):
+								remoteMountPath = fs_details['mount']
 								privateHostPath = private_ip + ":" + remoteMountPath
 								publicHostPath = public_ip + ":" + remoteMountPath
 								isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
 								if not isMounted:
 									if not os.path.exists(remoteMountPath):
 										os.mkdir(remoteMountPath)
-									if zone==data['zone']:
+									if zone==machine['zone']:
 										mountNfs(privateHostPath)
 									else:
 										mountNfs(publicHostPath)
@@ -102,8 +102,8 @@ while 1:
 										touch(touchFile)
 									log("Already mounted: " + isMounted)
 
-								online[privateHostPath] = data
-								online[publicHostPath] = data
+								online[privateHostPath] = machine
+								online[publicHostPath] = machine
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:
