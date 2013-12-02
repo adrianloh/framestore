@@ -164,28 +164,36 @@ while 1:
 			log("RAID present: " + raidPath)
 			if isMounted:
 				touchDir = mountPath + "/.connected/"
-				if not os.path.exists(touchDir):
-					os.mkdir(touchDir)
-				log("RAID mounted: " + mountPath)
-				# netstat -vat | grep nfs.*ESTABLISHED
-				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir + f) and time() - os.path.getmtime(touchDir + f) < 60]
-				res = os.popen("df -h | grep %s" % mdPath).read().strip()
-				if res:
-					data = res.split()
-					publish = filesystems[raidName] = dict(zip(keys, data))
-					if filesystems_status.has_key(raidName):
-						publish['status'] = filesystems_status[raidName]
-					publish['clients'] = len(connected)
-					publish['files'] = countFile(mountPath)
-					patchData(exports)
-				exportNfs(mountPath)
+				try:
+					if not os.path.exists(touchDir):
+						os.mkdir(touchDir)
+					log("RAID mounted: " + mountPath)
+					# netstat -vat | grep nfs.*ESTABLISHED
+					connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir + f) and time() - os.path.getmtime(touchDir + f) < 60]
+					res = os.popen("df -h | grep %s" % mdPath).read().strip()
+					if res:
+						data = res.split()
+						publish = filesystems[raidName] = dict(zip(keys, data))
+						if filesystems_status.has_key(raidName):
+							publish['status'] = filesystems_status[raidName]
+						publish['clients'] = len(connected)
+						publish['files'] = countFile(mountPath)
+						patchData(exports)
+					exportNfs(mountPath)
+				except OSError as e:
+					log("ERROR Exception: " + str(e))
+					setShareStatus(raidName, "error")
 			else:
 				log("Mounting RAID " + raidPath + " to " + mountPath)
-				if not os.path.exists(mountPath):
-					os.mkdir(mountPath)
-				cmd = "mount " + raidPath + " " + mountPath
-				setShareStatus(raidName, "mounting")
-				os.popen(cmd).read().strip()
+				try:
+					if not os.path.exists(mountPath):
+						os.mkdir(mountPath)
+					cmd = "mount " + raidPath + " " + mountPath
+					setShareStatus(raidName, "mounting")
+					os.popen(cmd).read().strip()
+				except Exception as e:
+					log("ERROR Exception: " + str(e))
+					setShareStatus(raidName, "error")
 
 	touch(pidfile)
 	sleep(5)
