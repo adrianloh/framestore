@@ -48,6 +48,8 @@ stat = {
 	'zone': zone
 }
 
+filesystems_status = {}
+
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
 res = os.popen(cmd).read()
 if res and not re.match("error", res):
@@ -101,8 +103,8 @@ def mdadmName(dev):
 	else:
 		return raidName
 
-
 def exportNfs(mountPath):
+	global filesystems_status
 	raidName = os.path.split(mountPath)[-1]
 	nfs_status = os.popen("service nfs status").read().strip()
 	started = re.search("running", nfs_status)
@@ -117,9 +119,11 @@ def exportNfs(mountPath):
 	if nfs_listening and nfs_exporting:
 		log("NFS share is online: " + mountPath)
 		sleep(2)
-		setShareStatus(raidName, "online")
+		filesystems_status[raidName] = "online"
+#		setShareStatus(raidName, "online")
 	else:
-		setShareStatus(raidName, "ready")
+		filesystems_status[raidName] = "ready"
+#		setShareStatus(raidName, "ready")
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
@@ -169,9 +173,11 @@ while 1:
 				if res:
 					data = res.split()
 					publish = filesystems[raidName] = dict(zip(keys, data))
+					if filesystems_status.has_key(raidName):
+						publish['status'] = filesystems_status[raidName]
 					publish['clients'] = len(connected)
 					publish['files'] = countFile(mountPath)
-					#patchData(exports)
+					patchData(exports)
 				exportNfs(mountPath)
 			else:
 				log("Mounting RAID " + raidPath + " to " + mountPath)
