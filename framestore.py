@@ -103,6 +103,7 @@ def mdadmName(dev):
 
 lastStatus = ""
 def exportNfs(mountPath):
+	global lastStatus
 	raidName = os.path.split(mountPath)[-1]
 	nfs_status = os.popen("service nfs status").read().strip()
 	started = re.search("running", nfs_status)
@@ -117,9 +118,13 @@ def exportNfs(mountPath):
 	if nfs_listening and nfs_exporting:
 		log("NFS share is online: " + mountPath)
 		sleep(2)
-		if lastStatus!="online": setShareStatus(raidName, "online")
+		if lastStatus!="online":
+			lastStatus = "online"
+			setShareStatus(raidName, "online")
 	else:
-		if lastStatus!="ready": setShareStatus(raidName, "ready")
+		if lastStatus!="ready":
+			lastStatus = "ready"
+			setShareStatus(raidName, "ready")
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
