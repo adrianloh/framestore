@@ -19,7 +19,7 @@ def log(string):
 	msg = "[ %s ] [ %s ] %s" % (asctime(), machine_id, string)
 	sys.stderr.write(msg + "\n")
 
-base = "https://badabing.firebaseio-demo.com"
+base = "badaboom"
 
 cmd = "curl -s %s | grep base=" % amazon['user-data']
 userbase = os.popen(cmd).read().strip()
@@ -28,7 +28,7 @@ if userbase:
 else:
 	log("WARNING: Using default Firebase: " + base)
 
-
+base = "https://%s.firebaseio-demo.com" % base
 framestoreBase = base + '/framestores.json'
 try:
 	meta = json.loads(os.popen("curl -s " + amazon['dynamic']).read().strip())
@@ -38,10 +38,9 @@ except ValueError:
 	exit(1)
 
 pidfile = "/var/run/framestore-client.pid"
-with open(pidfile, 'w') as f:
-	f.write(str(os.getpid()))
+os.popen("echo %s > %s" % (os.getpid(), pidfile)).read()
 
-log("Framestore client started.")
+log("Framestore client started (%s). Monitoring base @ %s" % (os.getpid(), base))
 
 @atexit.register
 def removeBase():
@@ -68,42 +67,41 @@ def touch(fname):
 	except (OSError, IOError): pass
 
 while 1:
-	touch(pidfile)
 	framestores = json.loads(os.popen("curl -s %s" % framestoreBase).read().strip())
 	online = {}
 	if framestores:
 		framestores = framestores.items()
 		log("Discovered " + str(len(framestores)) + " framestores.")
-		for (instance_id, data) in framestores:
-			log(json.dumps(data))
-			if instance_id!=machine_id \
-				and data.has_key('status') \
-				and data.has_key('private_ip') \
-				and data.has_key('public_ip'):
-				status = data['status']
-				private_ip = data['private_ip']
-				public_ip = data['public_ip']
-				if status=='online' and data.has_key('mount'):
-					remoteMountPath = data['mount']
-					privateHostPath = private_ip + ":" + remoteMountPath
-					publicHostPath = public_ip + ":" + remoteMountPath
-					isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
-					if not isMounted:
-						if not os.path.exists(remoteMountPath):
-							os.mkdir(remoteMountPath)
-						if zone==data['zone']:
-							mountNfs(privateHostPath)
-						else:
-							mountNfs(publicHostPath)
-					else:
-						touchDir = remoteMountPath + "/connected"
-						touchFile = touchDir + "/" + machine_id
-						if os.path.exists(touchDir):
-							touch(touchFile)
-						log("Already mounted: " + isMounted)
+		for (instance_id, filesystems) in framestores:
+			if instance_id!=machine_id:
+				for (raidName, data) in filesystems.items():
+					if data.has_key('status') \
+						and data.has_key('private_ip') \
+						and data.has_key('public_ip'):
+						status = data['status']
+						private_ip = data['private_ip']
+						public_ip = data['public_ip']
+						if status=='online' and data.has_key('mount'):
+							remoteMountPath = data['mount']
+							privateHostPath = private_ip + ":" + remoteMountPath
+							publicHostPath = public_ip + ":" + remoteMountPath
+							isMounted = os.popen("mount | grep " + remoteMountPath).read().strip()
+							if not isMounted:
+								if not os.path.exists(remoteMountPath):
+									os.mkdir(remoteMountPath)
+								if zone==data['zone']:
+									mountNfs(privateHostPath)
+								else:
+									mountNfs(publicHostPath)
+							else:
+								touchDir = remoteMountPath + "/.connected"
+								touchFile = touchDir + "/" + machine_id
+								if os.path.exists(touchDir):
+									touch(touchFile)
+								log("Already mounted: " + isMounted)
 
-					online[privateHostPath] = data
-					online[publicHostPath] = data
+							online[privateHostPath] = data
+							online[publicHostPath] = data
 
 	mounted = [l.strip().split() for l in os.popen("mount").readlines() if re.search("media",l) and re.search("nfs",l)]
 	for mount in mounted:

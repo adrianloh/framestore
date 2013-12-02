@@ -29,24 +29,23 @@ except ValueError:
 	log("FATAL: Amazon metadata error.")
 	exit(1)
 
-base = "https://badabing.firebaseio-demo.com"
+base = "badaboom"
 
-cmd = "curl -s %s | grep base=" % amazon['user-data']
+cmd = "curl -s -m 2 %s | grep base=" % amazon['user-data']
 userbase = os.popen(cmd).read().strip()
 if userbase:
 	base = userbase.split("=")[1]
 else:
 	log("WARNING: Using default Firebase: " + base)
 
-
+base = "https://%s.firebaseio-demo.com" % base
 framestoreBase = base + '/framestores'
 machineBase = framestoreBase + '/' + instance_id
 stat = {
 	'public_ip': public_ip,
 	'private_ip': private_ip,
 	'hostname': hostname,
-	'zone': zone,
-	'status': 'offline'
+	'zone': zone
 }
 
 cmd = """curl -sX PUT -d '%s' %s""" % (json.dumps(stat), machineBase + ".json")
@@ -58,9 +57,7 @@ else:
 	exit(1)
 
 pidfile = "/var/run/framestore.pid"
-with open(pidfile, 'w') as f:
-	f.write(str(os.getpid()))
-
+os.popen("echo %i > %s" % (os.getpid(), pidfile)).read()
 
 @atexit.register
 def removeBase():
@@ -87,8 +84,9 @@ def deleteData(key):
 	os.popen(cmd).read()
 
 
-def setStatus(status):
-	setData('status', status)
+def setShareStatus(shareName, status):
+	key = "filesystems/" + shareName + "/status"
+	setData(key, status)
 
 
 def mdadmName(dev):
@@ -105,6 +103,7 @@ def mdadmName(dev):
 
 
 def exportNfs(mountPath):
+	raidName = os.path.split(mountPath)[-1]
 	nfs_status = os.popen("service nfs status").read().strip()
 	started = re.search("running", nfs_status)
 	if not started:
@@ -118,9 +117,9 @@ def exportNfs(mountPath):
 	if nfs_listening and nfs_exporting:
 		log("NFS share is online: " + mountPath)
 		sleep(2)
-		setStatus("online")
+		setShareStatus(raidName, "online")
 	else:
-		setStatus("ready")
+		setShareStatus(raidName, "ready")
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
@@ -147,44 +146,40 @@ def touch(fname):
 		pass
 
 while 1:
-	touch(pidfile)
-	raidReady = os.popen("fdisk -l | grep /dev/md").read().strip()
+	raidsReady = [l.strip() for l in os.popen("fdisk -l | grep /dev/md").readlines() if l]
 	keys = ['device', "capacity", "usedSpace", "free", "usedPercent", "mount"]
-	if raidReady:
-		raidPath = re.findall("/dev/md\d+", raidReady)[0]
+	exports = dict(filesystems={})
+	filesystems = exports['filesystems']
+	for fdiskDetail in raidsReady:
+		raidPath = re.findall("/dev/md\d+", fdiskDetail)[0]
+		mdPath = os.path.split(raidPath)[-1]
 		raidName = mdadmName(raidPath)
 		if raidName:
 			mountPath = "/media/" + raidName
 			isMounted = os.popen("mount | grep " + mountPath).read().strip()
 			log("RAID present: " + raidPath)
 			if isMounted:
-				touchDir = mountPath + "/connected/"
+				touchDir = mountPath + "/.connected/"
 				if not os.path.exists(touchDir):
 					os.mkdir(touchDir)
 				log("RAID mounted: " + mountPath)
 				# netstat -vat | grep nfs.*ESTABLISHED
 				connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir + f) and time() - os.path.getmtime(touchDir + f) < 60]
-				res = os.popen("df -h | grep md").read().strip()
+				res = os.popen("df -h | grep %s" % mdPath).read().strip()
 				if res:
 					data = res.split()
-					publish = dict(zip(keys, data))
+					publish = filesystems[raidName] = dict(zip(keys, data))
 					publish['clients'] = len(connected)
 					publish['files'] = countFile(mountPath)
-					patchData(publish)
+					patchData(exports)
 				exportNfs(mountPath)
 			else:
 				log("Mounting RAID " + raidPath + " to " + mountPath)
 				if not os.path.exists(mountPath):
 					os.mkdir(mountPath)
 				cmd = "mount " + raidPath + " " + mountPath
-				setStatus("mounting")
+				setShareStatus(raidName, "mounting")
 				os.popen(cmd).read().strip()
-	else:
-		log("No RAID devices found.")
-		setStatus("offline")
-		data = [None for k in keys]
-		h = dict(zip(keys, data))
-		patchData(h)
 
 	touch(pidfile)
-	sleep(6)
+	sleep(5)

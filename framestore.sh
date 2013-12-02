@@ -12,7 +12,7 @@ logfile=/tmp/${name}.log
 GITBASE="https://github.com/adrianloh/framestore.git"
 RAWBASE=`echo ${GITBASE} | sed -e "s|github|raw.github|" -e "s|.git$|/master|"`
 INSTANCE_ID=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
-DEFAULT_BASE="https://badabing.firebaseio-demo.com"
+DEFAULT_BASE="badaboom"
 
 initfile=/etc/init.d/${name}
 initscript="${RAWBASE}/framestore.sh"
@@ -44,10 +44,11 @@ die() {
 		kill -9 ${proc}
 		res=`curl -s http://169.254.169.254/latest/user-data | grep base=`
 		if [ -n "${res}" ]; then
-			base=`echo ${res} | cut -d= -f2`
+			studio=`echo ${res} | cut -d= -f2`
 		else
-			base=${DEFAULT_BASE}
+			studio=${DEFAULT_BASE}
 		fi
+		base="https://${studio}.firebaseio-demo.com"
 		url="${base}/framestores/${INSTANCE_ID}.json"
 		echo -e "[ \033[31mSTOP\033[0m ] broadcast: ${url}"
 		curl -sX DELETE ${url} > /dev/null

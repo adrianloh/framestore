@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+
+import os, re, sys, json
+from threading import Thread
+from optparse import OptionParser
+from time import sleep
+parser = OptionParser()
+
+(options, args) = parser.parse_args()
+
+cluster_name = None
+cluster_size = None
+instance_id = None
+pemFile = None
+ec2host = None
+
+if len(args)!=4:
+	print "enter: [name_of_new_cluster] [number_of_drives]x[size_of_each_drive] [instance-id] [path_to_pem_file]"
+	exit(2)
+else:
+	cluster_name = args[0]
+	cluster_size = args[1]
+	instance_id = args[2]
+	pemFile = args[3]
+
+if not re.search("\d+x\d+", cluster_size):
+	print "\033[31mFATAL: Invalid cluster size. Valid example: '10x10' for 10 drives with 10GB each. \033[0m"
+	exit(2)
+
+if not os.path.exists(pemFile):
+	print "\033[31mFATAL: PEM file does not exists. \033[0m"
+	exit(1)
+
+if not re.search("^i-", instance_id):
+	get_instance_id = """ec2-describe-instances --filter instance-state-name=running --filter tag-value=%s | grep TAG | awk '{print $3}'""" % instance_id
+	res = [l.strip() for l in os.popen(get_instance_id).readlines() if l]
+	if res:
+		if len(res)==1 and re.search("^i-", res[0]):
+			instance_id = res[0]
+		else:
+			print "\033[31mFATAL: Got more than one running instance with name %s\033[0m" % instance_id
+			exit(1)
+	else:
+		print "\033[31mFATAL: No running instance with name %s\033[0m" % instance_id
+		exit(1)
+
+cmd = "ec2-describe-instances %s | grep INSTANCE | awk '{print $4}'" % instance_id
+ec2host = os.popen(cmd).read().strip()
+if not ec2host:
+	print "\033[31mFATAL: No running instance with instance-id %s\033[0m" % instance_id
+	exit(1)
+else:
+	print "\033[036mHOST %s\033[0m" % ec2host
+
+def sshcmd(cmd):
+	options = "-o User=ec2-user -o IdentityFile=%s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" % pemFile
+	ssh = """ssh -t %s %s "CMD" 2>/dev/null""" % (options, ec2host)
+	ssh = re.sub("CMD", cmd, ssh)
+	return os.popen(ssh).read().strip()
+
+print "\033[33mCreating EBS volumes...\033[0m"
+cmd = "ec2-create-volume-cluster %s %s" % (cluster_name, cluster_size)
+print os.popen(cmd).read().strip()
+
+print "\033[33mAttaching volumes to instance with following mappings...\033[0m"
+cmd = r"ec2-attach-volume-cluster %s %s" % (cluster_name, instance_id)
+mappings = [devicePath.strip().split(" ") for devicePath in os.popen(cmd).readlines() if devicePath]
+devices = [devicePath for (volumeId, devicePath) in mappings]
+count = len(devices)
+print "\n".join(["%s ==> %s" % (devmap[0], devmap[1]) for devmap in mappings])
+
+mounted = []
+while len(mounted) < count:
+	for devicePath in devices:
+		res = sshcmd("""sudo fdisk -l | grep "%s" | wc -l""" % devicePath)
+		if res and re.search("^\d+$", res) and int(res)>0:
+			if not devicePath in mounted:
+				mounted.append(devicePath)
+				print "%s [ \033[32mREADY %i/%i \033[0m ]" % (devicePath, len(mounted), count)
+	sleep(1)
+
+sleep(5)
+print "\033[33mCreating RAID array...\033[0m"
+wmds = set(["/dev/md%i:" % i for i in range(0,100)])
+cmd = "sudo fdisk -l | grep /dev/md"
+res = sshcmd(cmd)
+if res:
+	existing = set([l.strip().split(" ")[1] for l in res.split("\n") if l])
+	mdPath = list(wmds.difference(existing))[0]
+	mdPath = mdPath[:-1]
+else:
+	mdPath = "/dev/md0"
+cmd = "sudo mdadm --create %s --name=%s --level=0 --chunk=1024 --raid-devices=%s %s" % (mdPath, cluster_name, count, " ".join(devices))
+#print cmd
+print sshcmd(cmd)
+
+sshcmd("sudo yum -y install xfsprogs")
+
+print "\033[33mMounting RAID device and creating filesystem.\033[0m"
+cmd = "sudo mkdir -p /media/VOLUME_NAME && sudo mkfs.xfs MDPATH && sudo mount -t xfs MDPATH /media/VOLUME_NAME && sudo chown ec2-user:ec2-user /media/VOLUME_NAME"
+cmd = re.sub("MDPATH", mdPath, cmd)
+cmd = re.sub("VOLUME_NAME", cluster_name, cmd)
+print cmd
+print sshcmd(cmd)
