@@ -91,17 +91,48 @@ def setShareStatus(shareName, status):
 	setData(key, status)
 
 
+def getClusterName(devicePath):
+	"""
+	Given a path like /dev/xvdg to a device that belongs in a cluster group,
+	figure out the name of the cluster.
+	The very arcane "mappings" line turns the BLOCKDEVICE section of ec2-describe-instances:
+	BLOCKDEVICE	/dev/xvda	vol-d9aaf49a	2013-12-02T13:02:31.000Z	true
+	BLOCKDEVICE	/dev/xvdh	vol-edeab4ae	2013-12-02T15:28:32.000Z	false
+	BLOCKDEVICE	/dev/xvdf	vol-05eab446	2013-12-02T15:28:32.000Z	false
+	BLOCKDEVICE	/dev/xvdi	vol-eceab4af	2013-12-02T15:28:32.000Z	false
+	into a dictionary like this:
+		{'/dev/xvda': 'vol-d9aaf49a',
+		'/dev/xvdf': 'vol-05eab446',
+		'/dev/xvdh': 'vol-edeab4ae',
+		'/dev/xvdi': 'vol-eceab4af'}
+	"""
+	clusterName = None
+	zoner = re.search("us-east", zone) and "ec2.us-east-1.amazonaws.com" or "ec2.ap-southeast-1.amazonaws.com"
+	prefix = """export EC2_URL=ZONE; MY_COMMAND --aws-access-key AKIAJEJZXTMENIS4GJVQ --aws-secret-key 0CdRkLj9UOIPTbN9yboNOmfeom2QrK8Kc+pMcH51 """
+	prefix = re.sub("ZONE", zoner, prefix)
+	cmd1 = prefix +  " INSTANCE_ID | grep BLOCKDEVICE""".replace("INSTANCE_ID", instance_id)
+	ec2_describe_instances = re.sub("MY_COMMAND", "ec2-describe-instances", cmd1)
+	mappings = dict([(ll[1],ll[2]) for ll in [l.split("\t") for l in os.popen(ec2_describe_instances).read().split("\n") if l]])
+	if devicePath in mappings.keys():
+		volumeId = mappings[devicePath]
+		cmd2 = prefix + " VOLUME_ID | grep TAG | awk '{print $5}'".replace("VOLUME_ID", volumeId)
+		ec2_describe_volume = re.sub("MY_COMMAND", "ec2-describe-volumes", cmd2)
+		clusterName = os.popen(ec2_describe_volume).read().strip()
+	return clusterName
+
+
 def mdadmName(dev):
 	cmd = "mdadm --detail %s | grep Name" % dev
 	raidName = os.popen(cmd).read().strip()
 	if len(raidName.split(":")) > 1:
 		raidName = raidName.split(":")[-1].strip().split(" ")[0]
 	else:
-		return None
+		return getClusterName(dev)
 	if re.match("^\d+$", raidName) or len(raidName) == 0:
 		return None
 	else:
 		return raidName
+
 
 def exportNfs(mountPath):
 	global filesystems_status
@@ -120,10 +151,8 @@ def exportNfs(mountPath):
 		log("NFS share is online: " + mountPath)
 		sleep(2)
 		filesystems_status[raidName] = "online"
-#		setShareStatus(raidName, "online")
 	else:
 		filesystems_status[raidName] = "ready"
-#		setShareStatus(raidName, "ready")
 		cmd = "cat /etc/exports | grep " + mountPath
 		shared = os.popen(cmd).read().strip()
 		if not shared:
@@ -148,6 +177,7 @@ def touch(fname):
 				f.write("")
 	except (OSError, IOError):
 		pass
+
 
 while 1:
 	raidsReady = [l.strip() for l in os.popen("fdisk -l | grep /dev/md").readlines() if l]
