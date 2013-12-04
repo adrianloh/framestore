@@ -38,14 +38,17 @@ The name of the cluster filesystem (e.g. merovingian) is by default
 where *all* the machines in the cluster will mount the share: `/media/merovingian`
 
 Now inside **i-1bc5ef4d** (the client), as root:
-
 ```
 wget "https://raw.github.com/adrianloh/framestore/master/install.sh"
 sh install.sh framestore-client
 ```
 
 Now, if you wanna monitor the output of the service:
-
 ```
-tail -f /tmp/framestore.log
+tail -f /tmp/framestore[-client].log
+```
+
+To start/stop the service:
+```
+/ect/init.d/framestore[-client] (start|stop)
 ```
