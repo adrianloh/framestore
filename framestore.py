@@ -198,14 +198,25 @@ while 1:
 					if not os.path.exists(touchDir):
 						os.mkdir(touchDir)
 					log("RAID mounted: " + mountPath)
+
+					# Another way of finding established connections to this machine:
 					# netstat -vat | grep nfs.*ESTABLISHED
+
+					# Each connected client will periodically touch a file whose name
+					# is its own instance_id inside the server's .connected folder
+					# This is how we establish that the client is still around.
 					connected = [f for f in os.listdir(touchDir) if os.path.isfile(touchDir + f) and time() - os.path.getmtime(touchDir + f) < 60]
+
+					# Get the drive stats for this RAID. df -h 's output looks like:
+					# Filesystem            Size  Used Avail Use% Mounted on
+					# /dev/xvda1            7.9G  2.9G  5.0G  37% /
+					# tmpfs                 298M     0  298M   0% /dev/shm
+					# /dev/md127            5.0G   33M  5.0G   1% /media/milano
 					res = os.popen("df -h | grep %s" % mdPath).read().strip()
 					if res:
 						data = res.split()
 						publish = filesystems[raidName] = dict(zip(keys, data))
-						if filesystems_status.has_key(raidName):
-							publish['status'] = filesystems_status[raidName]
+						publish['status'] = filesystems_status.has_key(raidName) and filesystems_status[raidName] or "offline"
 						publish['clients'] = len(connected)
 						publish['files'] = countFile(mountPath)
 						patchData(exports)
