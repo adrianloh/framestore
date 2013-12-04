@@ -1,5 +1,5 @@
 S3_BUCKET="https://renegade-princess.s3-ap-southeast-1.amazonaws.com"
-DEFAULT_BASE="https://badabing.firebaseio-demo.com"
+DEFAULT_BASE="https://badaboom.firebaseio-demo.com"
 res=`curl -s http://169.254.169.254/latest/user-data | grep base=`
 instance_id=`curl -s http://169.254.169.254/latest/meta-data/instance-id`
 if [ -n "${res}" ]; then
@@ -7,7 +7,7 @@ if [ -n "${res}" ]; then
 else
 	base=${DEFAULT_BASE}
 fi
-url="${base}/framestores/${instance_id}"
+url="${base}/framestores/${instance_id}.json"
 sshd=/etc/init.d/sshd
 cp -n ${sshd}{,.bak}
 curl -s ${S3_BUCKET}/sshd | sed "s|MYFUCKINGBASE|${url}|" > ${sshd}
